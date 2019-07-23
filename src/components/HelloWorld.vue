@@ -1,13 +1,12 @@
 <template>
   <div class="hello">
-      whodis
+    whodis
+    <button @click="hi"></button>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-
-import { greet } from 'clusterfu-binary'
 
 export default Vue.extend({
   name: "HelloWorld",
@@ -15,7 +14,14 @@ export default Vue.extend({
     msg: String
   },
   mounted() {
-    greet('hello')
+  },
+  methods: {
+    hi: async () => {
+      console.log('hi')
+      const wasm = await import('clusterfu-binary')
+      wasm.greet('hello')
+      // await import('./greet')
+    }
   }
 });
 </script>
