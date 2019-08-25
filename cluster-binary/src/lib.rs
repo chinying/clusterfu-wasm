@@ -32,9 +32,7 @@ pub fn add(int: u32) -> u32 {
 }
 
 #[wasm_bindgen]
-pub fn cluster(x_arr: Vec<f64>, y_arr: Vec<f64>, w_arr: Vec<f64>) -> String {
-  let g_size = 15.0;
-  let distance = 100.0;
+pub fn cluster(x_arr: Vec<f64>, y_arr: Vec<f64>, w_arr: Vec<f64>, distance: f64) -> String {
 
   // log!("x: {:?}, y: {:?}, w: {:?}", x_arr, y_arr, w_arr);
   let v1 = x_arr.iter()
