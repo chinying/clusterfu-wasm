@@ -43,7 +43,7 @@ export default Vue.extend({
       wasm.greet('hello')
       const a = wasm.add(this.$data.radius)
       console.log(a)
-      wasm.cluster(32.1)
+      // wasm.cluster(32.1)
     },
 
     filesChange (e: any) { // type: Event?
@@ -54,7 +54,7 @@ export default Vue.extend({
       }
       let self = this
       Papa.parse(this.$data.uploadedFile, {
-        complete: function(results) {
+        complete: function(results: any) {
           console.log(results)
           console.log(self.$data)
           self.$data.fileContents = results.data
@@ -66,7 +66,7 @@ export default Vue.extend({
     },
 
     browse() {
-      this.$refs.fileInput.click()
+      (this.$refs.fileInput as HTMLElement).click()
     },
 
     async upload() {
