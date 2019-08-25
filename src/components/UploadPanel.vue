@@ -23,7 +23,7 @@ import * as Papa from 'papaparse'
 import unzip from 'lodash/unzip'
 
 export default Vue.extend({
-  name: "HelloWorld",
+  name: "Upload",
   props: {
     msg: String
   },

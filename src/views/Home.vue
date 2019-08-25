@@ -1,17 +1,17 @@
 <template>
   <div class="home">
-    <HelloWorld></HelloWorld>
+    <UploadPanel />
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import HelloWorld from "@/components/HelloWorld.vue"; // @ is an alias to /src
+import UploadPanel from "@/components/UploadPanel.vue"; // @ is an alias to /src
 
 export default Vue.extend({
   name: "home",
   components: {
-    HelloWorld
+    UploadPanel
   }
 });
 </script>
