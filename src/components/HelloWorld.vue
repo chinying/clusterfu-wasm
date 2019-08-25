@@ -1,8 +1,7 @@
 <template>
   <div class="hello">
-    Distance <input type="text" v-bind="radius" />
-    <input type="text" />
-    <button @click="hi"></button>
+    Distance <input type="text" v-model="radius" />
+    <button @click="computeClusters"></button>
 
     <br />
     <input type="file"
@@ -21,6 +20,7 @@ import Vue from "vue";
 import axios from 'axios'
 
 import * as Papa from 'papaparse'
+import unzip from 'lodash/unzip'
 
 export default Vue.extend({
   name: "HelloWorld",
@@ -31,7 +31,8 @@ export default Vue.extend({
     return {
       radius: 300,
       uploadedFile: undefined as File | undefined,
-      fileContents: []
+      fileContents: [],
+      clusters: [] as any[] // FIXME
     }
   },
   mounted() {
@@ -54,9 +55,7 @@ export default Vue.extend({
       }
       let self = this
       Papa.parse(this.$data.uploadedFile, {
-        complete: function(results: any) {
-          console.log(results)
-          console.log(self.$data)
+        complete: function(results: Papa.ParseResult) {
           self.$data.fileContents = results.data
         },
         error: function(err) {
@@ -70,13 +69,31 @@ export default Vue.extend({
     },
 
     async upload() {
-      let formData = new FormData();
-      /*
-          Add the form data we need to submit
-      */
-      formData.append('file', this.$data.uploadedFile);
-      let resp = await axios.post('http://localhost:7000/upload',  { rows: this.$data.fileContents })
-      console.log(resp)
+      try {
+        let formData = new FormData();
+        /*
+            Add the form data we need to submit
+        */
+        formData.append('file', this.$data.uploadedFile);
+        let resp = await axios.post('http://localhost:7000/upload',  { rows: this.$data.fileContents })
+        this.$data.clusters = resp.data
+        console.log(resp.data)
+        console.log('got response')
+      } catch (err) {
+        console.error(err)
+      }
+    },
+
+    async computeClusters() {
+      const wasm = await import('clusterfu-binary')
+      let clusters = this.$data.clusters
+      let unzipped = unzip(clusters)
+      let [xArray, yArray] = [unzipped[1], unzipped[2]] as [number[], number[]]
+      // let [xArray, yArray] = [[10.1, 17.8, 10.2, 32.1, 32.1], [9.9, 10.0, 17.8, 13.2, 13.2]]
+      let weightsArray: number[] = new Array(xArray.length).fill(1)
+      console.log(Float64Array.from( weightsArray))
+      const results = wasm.cluster(Float64Array.from(xArray), Float64Array.from(yArray), Float64Array.from(weightsArray))
+      console.log(results)
     }
   }
 });
