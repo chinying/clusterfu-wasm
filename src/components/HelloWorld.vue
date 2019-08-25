@@ -1,12 +1,12 @@
 <template>
   <div class="hello">
-    whodis
-    <button @click="hi"></button>
+    Distance <input type="text" v-model="radius" />
+    <button @click="computeClusters"></button>
 
     <br />
     <input type="file"
       ref="fileInput"
-      :name="uploadFieldName"
+      name="fileUploadField"
       class="input-file"
       @change="filesChange($event)"
       accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
@@ -19,6 +19,9 @@
 import Vue from "vue";
 import axios from 'axios'
 
+import * as Papa from 'papaparse'
+import unzip from 'lodash/unzip'
+
 export default Vue.extend({
   name: "HelloWorld",
   props: {
@@ -27,41 +30,70 @@ export default Vue.extend({
   data() {
     return {
       radius: 300,
-      uploadedFile: undefined as File | undefined
+      uploadedFile: undefined as File | undefined,
+      fileContents: [],
+      clusters: [] as any[] // FIXME
     }
   },
   mounted() {
   },
   methods: {
-    hi: async () => {
+    async hi () {
       console.log('hi')
       const wasm = await import('clusterfu-binary')
       wasm.greet('hello')
-      // await import('./greet')
+      const a = wasm.add(this.$data.radius)
+      console.log(a)
+      // wasm.cluster(32.1)
+    },
+
     filesChange (e: any) { // type: Event?
       this.$data.uploadedFile = e.target.files[0]
       if (this.$data.uploadedFile === undefined) { // no file selected
         // this.reset()
         return
       }
+      let self = this
+      Papa.parse(this.$data.uploadedFile, {
+        complete: function(results: Papa.ParseResult) {
+          self.$data.fileContents = results.data
+        },
+        error: function(err) {
+          console.error(err)
+        }
+      })
     },
 
     browse() {
-      this.$refs.fileInput.click()
+      (this.$refs.fileInput as HTMLElement).click()
     },
 
     async upload() {
-      let formData = new FormData();
-      /*
-          Add the form data we need to submit
-      */
-      formData.append('file', this.$data.uploadedFile);
-      let resp = await axios.post('http://localhost:7000/process', formData, {
-          headers: {
-              'Content-Type': 'multipart/form-data'
-          }
-        })
-      console.log(resp)
+      try {
+        let formData = new FormData();
+        /*
+            Add the form data we need to submit
+        */
+        formData.append('file', this.$data.uploadedFile);
+        let resp = await axios.post('http://localhost:7000/upload',  { rows: this.$data.fileContents })
+        this.$data.clusters = resp.data
+        console.log(resp.data)
+        console.log('got response')
+      } catch (err) {
+        console.error(err)
+      }
+    },
+
+    async computeClusters() {
+      const wasm = await import('clusterfu-binary')
+      let clusters = this.$data.clusters
+      let unzipped = unzip(clusters)
+      let [xArray, yArray] = [unzipped[1], unzipped[2]] as [number[], number[]]
+      // let [xArray, yArray] = [[10.1, 17.8, 10.2, 32.1, 32.1], [9.9, 10.0, 17.8, 13.2, 13.2]]
+      let weightsArray: number[] = new Array(xArray.length).fill(1)
+      console.log(Float64Array.from( weightsArray))
+      const results = wasm.cluster(Float64Array.from(xArray), Float64Array.from(yArray), Float64Array.from(weightsArray))
+      console.log(results)
     }
   }
 });
