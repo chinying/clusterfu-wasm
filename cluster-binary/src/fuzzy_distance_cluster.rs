@@ -9,12 +9,12 @@ pub struct FuzzyDistanceClusterClass {
 }
 
 pub trait FuzzyDistanceCluster {
-  fn apply(&self, v1: Vec<(FuzzyPoint, i32)>);
+  fn apply(&self, v1: Vec<(FuzzyPoint, i32)>) -> Vec<((f64, f64), i32)>;
   fn next_repr(&self, acc: Vec<((f64, f64), Vec<(f64, f64)>)>, unpicked_set: HashSet<(i32, i32)>, fuzzy_points_map: &mut FuzzyPointMapClass, pq: &mut BinaryHeap<(i32, (i32, i32))>) -> Vec<((f64, f64), Vec<(f64, f64)>)>;
 }
 
 impl FuzzyDistanceCluster for FuzzyDistanceClusterClass {
-  fn apply(&self, v1: Vec<(FuzzyPoint, i32)>) {
+  fn apply(&self, v1: Vec<(FuzzyPoint, i32)>) -> Vec<((f64, f64), i32)> {
     let pts: Vec<((f64, f64), i32)> = v1
       .iter()
       .map(|&(p, idx)| ((p.x, p.y), idx))
@@ -64,17 +64,14 @@ impl FuzzyDistanceCluster for FuzzyDistanceClusterClass {
     let key_set: HashSet<(i32, i32)> = fuzzy_point_map::from_seq(&pts, self.grid_size).iter().map(|(&k, _)| k).collect();
 
     // println!("key set {:?}", key_set);
-    let clusters = self.next_repr(acc, key_set, &mut grid, &mut pq);
-    // clusters.toSeq.map({
-    //   case (xy, items) => (xy, items.map(_._1).size)
-    // }).sortBy(_._2)
-    //   .foreach {
-    //     case ((x, y), weight) => println(s"$x $y $weight")
-    //   }
+    let mut clusters = self.next_repr(acc, key_set, &mut grid, &mut pq);
 
-    for (cluster, points) in clusters {
-      println!("{:?} {:?}", cluster, points.len());
-    }
+    clusters
+      .iter()
+      .cloned()
+      .map(|(cluster, points)| {
+        (cluster, points.len() as i32)
+      }).collect::<Vec<((f64, f64), i32)>>()
 
   }
 

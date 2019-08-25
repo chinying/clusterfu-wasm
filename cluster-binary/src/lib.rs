@@ -45,11 +45,17 @@ pub fn cluster(x_arr: Vec<f64>, y_arr: Vec<f64>, w_arr: Vec<f64>) -> String {
     })
     .collect::<Vec<fuzzy_point_map::FuzzyPoint>>();
 
-  log!("{:?}", v1);
+  // log!("{:?}", v1);
 
   let indexed_vec = v1.iter().enumerate()
     .map(|(index, &fzm)| (fzm, index as i32))
     .collect::<Vec<(fuzzy_point_map::FuzzyPoint, i32)>>();
+
+  // log!("indexed vec {:?}", indexed_vec);
   let fuzzy_cluster_app = fuzzy_distance_cluster::FuzzyDistanceClusterClass{distance: distance, grid_size: distance * 0.09};
-  format!("{:?}", fuzzy_cluster_app.apply(indexed_vec)).into()
+
+  let results = fuzzy_cluster_app.apply(indexed_vec);
+  // log!("cluster results: {:?}", results);
+
+  format!("{:?}", results).into()
 }
