@@ -11,6 +11,10 @@
         ref="mapRef"
       ></GmapMap>
     </div>
+    <div id="floating_menu">
+      something
+      {{ points }}
+    </div>
   </div>
 </template>
 
@@ -30,6 +34,25 @@ export default Vue.extend({
     return {
       mapConfig
     }
+  },
+  computed: {
+    points (): Array<Array<string>> {
+      return this.$store.state.dataWithCoordinates
+    }
   }
 })
 </script>
+
+<style lang="scss" scoped>
+#floating_menu {
+  position: absolute;
+  text-align: left;
+  top: 100px;
+  min-height: 40vh;
+  max-height: 80vh;
+  width: 30%;
+  background: white;
+  overflow-x: scroll !important;
+  word-break: break-word;
+}
+</style>
