@@ -76,12 +76,10 @@ impl FuzzyDistanceCluster for FuzzyDistanceClusterClass {
   }
 
   fn next_repr (&self, mut acc: Vec<((f64, f64), Vec<(f64, f64)>)>,
-    unpicked_set: HashSet<(i32, i32)>,
+    mut unpicked_set: HashSet<(i32, i32)>,
     fuzzy_points_map: &mut FuzzyPointMapClass,
     pq: &mut BinaryHeap<(i32, (i32, i32))>)-> Vec<((f64, f64), Vec<(f64, f64)>)> {
-    if pq.peek() == None {
-      acc
-    } else {
+    while pq.peek() != None {
       let (score, uv) = match pq.pop() {
         Some((s, uv)) => (s, uv),
         None => panic!("pq empty")
@@ -98,10 +96,8 @@ impl FuzzyDistanceCluster for FuzzyDistanceClusterClass {
           }
         }).sum();
 
-      // println!("actual score {}, score {}", actual_score, score);
-
       if !unpicked_set.contains(&uv) {
-        return self.next_repr(acc, unpicked_set, fuzzy_points_map, pq)
+        continue
       } else if actual_score as i32 == score {
         let prepend_acc = neighbouring_grid_centres
           .iter()
@@ -122,37 +118,22 @@ impl FuzzyDistanceCluster for FuzzyDistanceClusterClass {
           .map(|&v| v) // needed to clone
           .collect::<HashSet<(i32, i32)>>();
 
-        let new_unpicked = unpicked_set
-          .difference(&neighbouring_grid_centers_set)
-          .map(|&v| v) // needed to clone
-          .collect::<HashSet<_>>();
-
-        // println!("neighbouring {:?} \n unpicked {:?}", neighbouring_grid_centers_set, new_unpicked);
-        // HashMap<(i32, i32), HashSet<(i32, i32)>>
-        // let points_to_remove = fuzzy_points_map.map
-        //   .iter()
-        //   .filter(|(k, _)| {
-        //     neighbouring_grid_centers_set.contains(k)
-        //   });
+        for grid_center in neighbouring_grid_centres.iter() {
+          unpicked_set.remove(&grid_center);
+        }
 
         for point in neighbouring_grid_centers_set.iter() {
           fuzzy_points_map.map.remove(&point);
         }
 
-        return self.next_repr(
-          acc,
-          new_unpicked,
-          fuzzy_points_map,
-          pq
-        );
       } else if (actual_score as i32) < score {
         if actual_score as i32 > 0 {
           pq.push((actual_score as i32, uv));
         }
-        return self.next_repr(acc, unpicked_set, fuzzy_points_map, pq)
       } else {
         panic!("illegal state")
       }
     }
+    acc
   }
 }
