@@ -93,7 +93,7 @@ export default Vue.extend({
       // let [xArray, yArray] = [[10.1, 17.8, 10.2, 32.1, 32.1], [9.9, 10.0, 17.8, 13.2, 13.2]]
       let weightsArray: number[] = new Array(xArray.length).fill(1)
       console.log(Float64Array.from( weightsArray))
-      const results = wasm.cluster(Float64Array.from(xArray), Float64Array.from(yArray), Float64Array.from(weightsArray), 100.0)
+      const results = wasm.cluster(Float64Array.from(xArray), Float64Array.from(yArray), Float64Array.from(weightsArray), this.$data.radius)
       console.log(results)
     }
   }
