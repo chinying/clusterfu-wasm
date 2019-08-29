@@ -90,6 +90,7 @@ export default Vue.extend({
       const wasm = await import('clusterfu-binary')
       let points = this.$data.points
       let unzipped = unzip(points)
+      console.log('unzipped', unzipped)
       let [xArray, yArray] = [unzipped[1], unzipped[2]] as [number[], number[]]
       let weightsArray: number[] = new Array(xArray.length).fill(1)
       const clusterResults = wasm.cluster(Float64Array.from(xArray), Float64Array.from(yArray), Float64Array.from(weightsArray), this.$data.radius)
