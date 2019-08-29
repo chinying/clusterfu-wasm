@@ -21,6 +21,7 @@ import axios from 'axios'
 
 import * as Papa from 'papaparse'
 import unzip from 'lodash/unzip'
+import { ClusterResponse } from '../types/cluster'
 
 export default Vue.extend({
   name: "Upload",
@@ -32,7 +33,7 @@ export default Vue.extend({
       radius: 300,
       uploadedFile: undefined as File | undefined,
       fileContents: [],
-      clusters: [] as any[] // FIXME
+      points: [] as any[] // FIXME
     }
   },
   mounted() {
@@ -76,9 +77,10 @@ export default Vue.extend({
         */
         formData.append('file', this.$data.uploadedFile);
         let resp = await axios.post('http://localhost:7000/upload',  { rows: this.$data.fileContents })
-        this.$data.clusters = resp.data
+        this.$data.points = resp.data
         console.log(resp.data)
         console.log('got response')
+        this.$store.commit('setDataWithCoordinates', resp.data)
       } catch (err) {
         console.error(err)
       }
@@ -86,14 +88,17 @@ export default Vue.extend({
 
     async computeClusters() {
       const wasm = await import('clusterfu-binary')
-      let clusters = this.$data.clusters
-      let unzipped = unzip(clusters)
+      let points = this.$data.points
+      let unzipped = unzip(points)
+      console.log('unzipped', unzipped)
       let [xArray, yArray] = [unzipped[1], unzipped[2]] as [number[], number[]]
-      // let [xArray, yArray] = [[10.1, 17.8, 10.2, 32.1, 32.1], [9.9, 10.0, 17.8, 13.2, 13.2]]
       let weightsArray: number[] = new Array(xArray.length).fill(1)
-      console.log(Float64Array.from( weightsArray))
-      const results = wasm.cluster(Float64Array.from(xArray), Float64Array.from(yArray), Float64Array.from(weightsArray))
-      console.log(results)
+      const clusterResults = wasm.cluster(Float64Array.from(xArray), Float64Array.from(yArray), Float64Array.from(weightsArray), this.$data.radius)
+      const clusters = JSON.parse(clusterResults)
+        .map((cluster: string) => JSON.parse(cluster)) as Array<ClusterResponse>
+
+      this.$store.commit('setClusters', clusters)
+      this.$router.push({name: 'map'})
     }
   }
 });

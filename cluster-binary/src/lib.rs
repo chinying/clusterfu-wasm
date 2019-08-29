@@ -1,5 +1,13 @@
 extern crate wasm_bindgen;
 extern crate web_sys;
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ClusterJson {
+  x: f64,
+  y: f64,
+  weight: i32
+}
 
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
 macro_rules! log {
@@ -32,9 +40,7 @@ pub fn add(int: u32) -> u32 {
 }
 
 #[wasm_bindgen]
-pub fn cluster(x_arr: Vec<f64>, y_arr: Vec<f64>, w_arr: Vec<f64>) -> String {
-  let g_size = 15.0;
-  let distance = 100.0;
+pub fn cluster(x_arr: Vec<f64>, y_arr: Vec<f64>, w_arr: Vec<f64>, distance: f64) -> String {
 
   // log!("x: {:?}, y: {:?}, w: {:?}", x_arr, y_arr, w_arr);
   let v1 = x_arr.iter()
@@ -54,8 +60,12 @@ pub fn cluster(x_arr: Vec<f64>, y_arr: Vec<f64>, w_arr: Vec<f64>) -> String {
   // log!("indexed vec {:?}", indexed_vec);
   let fuzzy_cluster_app = fuzzy_distance_cluster::FuzzyDistanceClusterClass{distance: distance, grid_size: distance * 0.09};
 
-  let results = fuzzy_cluster_app.apply(indexed_vec);
-  // log!("cluster results: {:?}", results);
-
-  format!("{:?}", results).into()
+  let clusters = fuzzy_cluster_app.apply(indexed_vec);
+  let clusters_as_json = clusters.iter()
+    .map(|&((x, y), w)| {
+      let result_object = ClusterJson{x: x, y: y, weight: w};
+      serde_json::to_string(&result_object).unwrap()
+    })
+    .collect::<Vec<String>>();
+  format!("{:?}", clusters_as_json).into()
 }

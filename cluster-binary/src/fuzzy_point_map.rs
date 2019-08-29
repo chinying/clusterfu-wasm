@@ -46,7 +46,7 @@ impl FuzzyPointMap for FuzzyPointMapClass {
     // println!("CANDIDATE KEYS {:?}", candidate_keys(minx, maxx, miny, maxy));
 
     let all_included = |key: (f64, f64)| -> bool {
-      let other_point = FuzzyPoint{x: key.0, y: key.1, weight: 1.0};
+      let other_point = FuzzyPoint{x: key.0 * self.grid_size, y: key.1 * self.grid_size, weight: 1.0};
       return within_range(&point, &other_point, r as f64);
     };
 
@@ -129,25 +129,6 @@ pub fn key_pair_fn(grid_size: f64) -> impl Fn((f64, f64)) -> (i32, i32) {
   move |(x,y)| (key_fn(grid_size)(x), key_fn(grid_size)(y))
 }
 
-//def gridCenter(gridSize: Double)(p: (Int, Int)) = (p._1 * gridSize, p._2 * gridSize)
 pub fn grid_center(grid_size: f64) -> impl Fn((i32, i32)) -> (f64, f64) {
   move |p| (p.0 as f64 * grid_size, p.1 as f64 * grid_size)
-}
-
-fn cluster(dist: i32, points: &[FuzzyPoint]) {
-  assert!(points.len() > 1);
-  // how do you pick a center
-  // within_range()
-  for point in points {
-    if within_range(&points[0], &point, dist as f64) {
-      println!("inside {:?}", point);
-    }
-  }
-}
-
-fn all_included(key: (i32, i32)) -> bool {
-  let point = FuzzyPoint{x: 1.1, y: 10.0, weight: 1.0};
-  let r = 100.0;
-  let other_point = FuzzyPoint{x: key.0 as f64, y: key.1 as f64, weight: 1.0};
-  return within_range(&point, &other_point, r);
 }
