@@ -2,11 +2,11 @@
   <div>
     <div id="map">
       <GmapMap
-        :center="{lat:1.3521, lng:103.8198}"
+        :center="{ lat: 1.3521, lng: 103.8198 }"
         :zoom="12"
         map-type-id="roadmap"
         style="width: 100%; height: 100vh;"
-        :options="{styles: mapConfig}"
+        :options="{ styles: mapConfig }"
         id="gmap"
         ref="mapRef"
       >
@@ -21,55 +21,55 @@
     </div>
     <div id="floating_menu">
       something
-      <p v-for="origin in clusters"
-      :key="JSON.stringify(origin.center)">
-        {{ origin.center.lat + ',' + origin.center.lng + ' - ' +  origin.weight }}
+      <p v-for="origin in clusters" :key="JSON.stringify(origin.center)">
+        {{
+          origin.center.lat + "," + origin.center.lng + " - " + origin.weight
+        }}
       </p>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
-import ClusterOfPoints from './Cluster.vue'
-const VueGoogleMaps = require('vue2-google-maps')
-const mapConfig = require('./mapStyles.json')
+import Vue from "vue";
+import ClusterOfPoints from "./Cluster.vue";
+const VueGoogleMaps = require("vue2-google-maps");
+const mapConfig = require("./mapStyles.json");
 
-import { ClusterResponse, WeightedClusterCenter } from '../types/cluster'
-import { XYToLatLng } from '../utils'
+import { ClusterResponse, WeightedClusterCenter } from "../types/cluster";
+import { XYToLatLng } from "../utils";
 
 export default Vue.extend({
-  name: 'ClusterMap',
+  name: "ClusterMap",
   components: {
     GmapMap: VueGoogleMaps.Map,
     GmapMarker: VueGoogleMaps.Marker,
     GmapCircle: VueGoogleMaps.Circle,
     ClusterOfPoints
   },
-  data () {
+  data() {
     return {
       mapConfig
-    }
+    };
   },
   computed: {
-    points (): Array<Array<string>> {
-      return this.$store.state.dataWithCoordinates
+    points(): Array<Array<string>> {
+      return this.$store.state.dataWithCoordinates;
     },
     clusters(): Array<WeightedClusterCenter> {
-      return this.$store.state.clusters
-        .map((cluster: ClusterResponse) => {
-          let coordinates = XYToLatLng(cluster.x, cluster.y)
-          return {
-            center: {
-              lat: Number(coordinates.lat),
-              lng: Number(coordinates.lng),
-            },
-            weight: cluster.weight
-          }
-        })
+      return this.$store.state.clusters.map((cluster: ClusterResponse) => {
+        let coordinates = XYToLatLng(cluster.x, cluster.y);
+        return {
+          center: {
+            lat: Number(coordinates.lat),
+            lng: Number(coordinates.lng)
+          },
+          weight: cluster.weight
+        };
+      });
     }
   }
-})
+});
 </script>
 
 <style lang="scss" scoped>

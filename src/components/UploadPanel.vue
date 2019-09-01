@@ -4,12 +4,14 @@
     <button @click="computeClusters"></button>
 
     <br />
-    <input type="file"
+    <input
+      type="file"
       ref="fileInput"
       name="fileUploadField"
       class="input-file"
       @change="filesChange($event)"
-      accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+      accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+    />
     <!-- <button @click="browse()">Browse</button> -->
     <button @click="upload()">Upload</button>
   </div>
@@ -17,11 +19,11 @@
 
 <script lang="ts">
 import Vue from "vue";
-import axios from 'axios'
+import axios from "axios";
 
-import * as Papa from 'papaparse'
-import unzip from 'lodash/unzip'
-import { ClusterResponse } from '../types/cluster'
+import * as Papa from "papaparse";
+import unzip from "lodash/unzip";
+import { ClusterResponse } from "../types/cluster";
 
 export default Vue.extend({
   name: "Upload",
@@ -34,39 +36,40 @@ export default Vue.extend({
       uploadedFile: undefined as File | undefined,
       fileContents: [],
       points: [] as any[] // FIXME
-    }
+    };
   },
-  mounted() {
-  },
+  mounted() {},
   methods: {
-    async hi () {
-      console.log('hi')
-      const wasm = await import('clusterfu-binary')
-      wasm.greet('hello')
-      const a = wasm.add(this.$data.radius)
-      console.log(a)
+    async hi() {
+      console.log("hi");
+      const wasm = await import("clusterfu-binary");
+      wasm.greet("hello");
+      const a = wasm.add(this.$data.radius);
+      console.log(a);
       // wasm.cluster(32.1)
     },
 
-    filesChange (e: any) { // type: Event?
-      this.$data.uploadedFile = e.target.files[0]
-      if (this.$data.uploadedFile === undefined) { // no file selected
+    filesChange(e: any) {
+      // type: Event?
+      this.$data.uploadedFile = e.target.files[0];
+      if (this.$data.uploadedFile === undefined) {
+        // no file selected
         // this.reset()
-        return
+        return;
       }
-      let self = this
+      let self = this;
       Papa.parse(this.$data.uploadedFile, {
         complete: function(results: Papa.ParseResult) {
-          self.$data.fileContents = results.data
+          self.$data.fileContents = results.data;
         },
         error: function(err) {
-          console.error(err)
+          console.error(err);
         }
-      })
+      });
     },
 
     browse() {
-      (this.$refs.fileInput as HTMLElement).click()
+      (this.$refs.fileInput as HTMLElement).click();
     },
 
     async upload() {
@@ -75,35 +78,43 @@ export default Vue.extend({
         /*
             Add the form data we need to submit
         */
-        formData.append('file', this.$data.uploadedFile);
-        let resp = await axios.post('http://localhost:7000/upload',  { rows: this.$data.fileContents })
-        this.$data.points = resp.data
-        console.log(resp.data)
-        console.log('got response')
-        this.$store.commit('setDataWithCoordinates', resp.data)
+        formData.append("file", this.$data.uploadedFile);
+        let resp = await axios.post("http://localhost:7000/upload", {
+          rows: this.$data.fileContents
+        });
+        this.$data.points = resp.data;
+        console.log(resp.data);
+        console.log("got response");
+        this.$store.commit("setDataWithCoordinates", resp.data);
       } catch (err) {
-        console.error(err)
+        console.error(err);
       }
     },
 
     async computeClusters() {
-      console.time('cluster')
-      const wasm = await import('clusterfu-binary')
-      console.timeLog('cluster', 'module loaded')
-      let points = this.$data.points
-      let unzipped = unzip(points)
-      console.log('unzipped', unzipped)
-      let [xArray, yArray] = [unzipped[1], unzipped[2]] as [number[], number[]]
-      let weightsArray: number[] = new Array(xArray.length).fill(1)
-      console.timeLog('cluster', 'lodash unzip array for input')
-      const clusterResults = wasm.cluster(Float64Array.from(xArray), Float64Array.from(yArray), Float64Array.from(weightsArray), this.$data.radius)
-      console.timeLog('cluster', 'feed input, run wasm.cluster')
-      const clusters = JSON.parse(clusterResults)
-        .map((cluster: string) => JSON.parse(cluster)) as Array<ClusterResponse>
+      console.time("cluster");
+      const wasm = await import("clusterfu-binary");
+      console.timeLog("cluster", "module loaded");
+      let points = this.$data.points;
+      let unzipped = unzip(points);
+      console.log("unzipped", unzipped);
+      let [xArray, yArray] = [unzipped[1], unzipped[2]] as [number[], number[]];
+      let weightsArray: number[] = new Array(xArray.length).fill(1);
+      console.timeLog("cluster", "lodash unzip array for input");
+      const clusterResults = wasm.cluster(
+        Float64Array.from(xArray),
+        Float64Array.from(yArray),
+        Float64Array.from(weightsArray),
+        this.$data.radius
+      );
+      console.timeLog("cluster", "feed input, run wasm.cluster");
+      const clusters = JSON.parse(clusterResults).map((cluster: string) =>
+        JSON.parse(cluster)
+      ) as Array<ClusterResponse>;
 
-      this.$store.commit('setClusters', clusters)
-      console.timeLog('cluster')
-      this.$router.push({name: 'map'})
+      this.$store.commit("setClusters", clusters);
+      console.timeLog("cluster");
+      this.$router.push({ name: "map" });
     }
   }
 });
