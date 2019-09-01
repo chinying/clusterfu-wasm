@@ -87,17 +87,22 @@ export default Vue.extend({
     },
 
     async computeClusters() {
+      console.time('cluster')
       const wasm = await import('clusterfu-binary')
+      console.timeLog('cluster', 'module loaded')
       let points = this.$data.points
       let unzipped = unzip(points)
       console.log('unzipped', unzipped)
       let [xArray, yArray] = [unzipped[1], unzipped[2]] as [number[], number[]]
       let weightsArray: number[] = new Array(xArray.length).fill(1)
+      console.timeLog('cluster', 'lodash unzip array for input')
       const clusterResults = wasm.cluster(Float64Array.from(xArray), Float64Array.from(yArray), Float64Array.from(weightsArray), this.$data.radius)
+      console.timeLog('cluster', 'feed input, run wasm.cluster')
       const clusters = JSON.parse(clusterResults)
         .map((cluster: string) => JSON.parse(cluster)) as Array<ClusterResponse>
 
       this.$store.commit('setClusters', clusters)
+      console.timeLog('cluster')
       this.$router.push({name: 'map'})
     }
   }

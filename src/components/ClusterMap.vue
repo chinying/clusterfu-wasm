@@ -16,7 +16,7 @@
           :center="origin.center"
           :radiusMultiplier="50"
           :population="origin.weight"
-        ></ClusterOfPoints> 
+        ></ClusterOfPoints>
       </GmapMap>
     </div>
     <div id="floating_menu">
