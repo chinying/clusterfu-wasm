@@ -12,4 +12,5 @@ export interface WeightedClusterCenter {
     lng: number;
   };
   weight: number;
+  normalisedWeight: number;
 }
