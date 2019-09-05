@@ -98,7 +98,7 @@ export default Vue.extend({
       let points = this.$data.points;
       let unzipped = unzip(points);
       console.log("unzipped", unzipped);
-      let [xArray, yArray] = [unzipped[1], unzipped[2]] as [number[], number[]];
+      let [xArray, yArray] = [unzipped[3], unzipped[4]] as [number[], number[]];
       let weightsArray: number[] = new Array(xArray.length).fill(1);
       console.timeLog("cluster", "lodash unzip array for input");
       const clusterResults = wasm.cluster(
@@ -112,7 +112,7 @@ export default Vue.extend({
         JSON.parse(cluster)
       ) as Array<ClusterResponse>;
 
-      this.$store.commit("setClusters", clusters);
+      this.$store.commit("setDestinationClusters", clusters);
       console.timeLog("cluster");
       this.$router.push({ name: "map" });
     }

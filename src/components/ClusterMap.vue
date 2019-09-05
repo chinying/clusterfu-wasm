@@ -11,19 +11,20 @@
         ref="mapRef"
       >
         <ClusterOfPoints
-          v-for="(origin, index) in clusters"
-          :key="`origin_${index}`"
-          :center="origin.center"
+          v-for="(destination, index) in destinationClusters"
+          :key="`destination_${index}`"
+          :center="destination.center"
           :radiusMultiplier="50"
-          :population="origin.weight"
+          :population="destination.weight"
+          @click="toggleDestination(destination)"
         ></ClusterOfPoints>
       </GmapMap>
     </div>
     <div id="floating_menu">
       something
-      <p v-for="origin in clusters" :key="JSON.stringify(origin.center)">
+      <p v-for="destination in destinationClusters" :key="JSON.stringify(destination.center)">
         {{
-          origin.center.lat + "," + origin.center.lng + " - " + origin.weight
+          destination.center.lat + "," + destination.center.lng + " - " + destination.weight
         }}
       </p>
     </div>
@@ -49,17 +50,49 @@ export default Vue.extend({
   },
   data() {
     return {
-      mapConfig
+      mapConfig,
+      selectedOrigins: {},
+      selectedDestinations: {},
+      originClusters: [] as Array<WeightedClusterCenter>
     };
+  },
+  methods: {
+    async toggleDestination (cluster: WeightedClusterCenter) {
+      let selectedDestinations = this.$data.selectedDestinations
+      this.$data.originClusters = []
+      this.$data.selectedOrigins = {}
+      // toggle selected origin
+      const destKey = `${cluster.x}_${cluster.y}`
+      if (!(destKey in selectedDestinations)) {
+        this.$set(selectedDestinations, destKey, cluster)
+        let latlng = XYToLatLng(cluster.x, cluster.y)
+        // only set but don't delete since they don't need to be recomputed
+        // this.$set(this.$data.clusterNames, destKey, await this.reverseGeocode(latlng.lat, latlng.lng))
+      } else {
+        this.$delete(selectedDestinations, destKey)
+      }
+
+      // // call destination clusters
+      this.findOriginClusters()
+      // // recompute suggestions based on new destinations
+      // this.suggestions()
+    },
+    // https://stackoverflow.com/questions/50930796/how-to-get-typescript-method-callback-working-in-vuejs
+    findOriginClusters: _.debounce(async function(this: any) {
+      const clusters = this.$data.selectedDestinations
+      console.log(clusters)
+    }, 300),
   },
   computed: {
     points(): Array<Array<string>> {
       return this.$store.state.dataWithCoordinates;
     },
-    clusters(): Array<WeightedClusterCenter> {
-      return this.$store.state.clusters.map((cluster: ClusterResponse) => {
+    destinationClusters(): Array<WeightedClusterCenter> {
+      return this.$store.state.destinationClusters.map((cluster: ClusterResponse) => {
         let coordinates = XYToLatLng(cluster.x, cluster.y);
         return {
+          x: cluster.x,
+          y: cluster.y,
           center: {
             lat: Number(coordinates.lat),
             lng: Number(coordinates.lng)

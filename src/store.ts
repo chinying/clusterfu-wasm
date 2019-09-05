@@ -8,14 +8,14 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     dataWithCoordinates: [] as Array<Array<string>>,
-    clusters: [] as Array<ClusterResponse>
+    destinationClusters: [] as Array<ClusterResponse>
   },
   mutations: {
     setDataWithCoordinates(state, val: Array<Array<string>>) {
       state.dataWithCoordinates = val;
     },
-    setClusters(state, val: Array<ClusterResponse>) {
-      state.clusters = val;
+    setDestinationClusters(state, val: Array<ClusterResponse>) {
+      state.destinationClusters = val;
     }
   },
   actions: {}
