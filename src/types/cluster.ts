@@ -5,8 +5,8 @@ export interface ClusterResponse {
 }
 
 export interface WeightedClusterCenter {
-  x: number,
-  y: number,
+  x: number;
+  y: number;
   center: {
     lat: number;
     lng: number;
