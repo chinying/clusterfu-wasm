@@ -57,12 +57,12 @@ export default Vue.extend({
         // this.reset()
         return;
       }
-      let self = this;
+      const self = this;
       Papa.parse(this.$data.uploadedFile, {
-        complete: function(results: Papa.ParseResult) {
+        complete(results: Papa.ParseResult) {
           self.$data.fileContents = results.data;
         },
-        error: function(err) {
+        error(err) {
           console.error(err);
         }
       });
@@ -74,12 +74,12 @@ export default Vue.extend({
 
     async upload() {
       try {
-        let formData = new FormData();
+        const formData = new FormData();
         /*
             Add the form data we need to submit
         */
         formData.append("file", this.$data.uploadedFile);
-        let resp = await axios.post("http://localhost:7000/upload", {
+        const resp = await axios.post("http://localhost:7000/upload", {
           rows: this.$data.fileContents
         });
         this.$data.points = resp.data;
@@ -95,11 +95,14 @@ export default Vue.extend({
       console.time("cluster");
       const wasm = await import("clusterfu-binary");
       console.timeLog("cluster", "module loaded");
-      let points = this.$data.points;
-      let unzipped = unzip(points);
+      const { points } = this.$data;
+      const unzipped = unzip(points);
       console.log("unzipped", unzipped);
-      let [xArray, yArray] = [unzipped[1], unzipped[2]] as [number[], number[]];
-      let weightsArray: number[] = new Array(xArray.length).fill(1);
+      const [xArray, yArray] = [unzipped[3], unzipped[4]] as [
+        number[],
+        number[]
+      ];
+      const weightsArray: number[] = new Array(xArray.length).fill(1);
       console.timeLog("cluster", "lodash unzip array for input");
       const clusterResults = wasm.cluster(
         Float64Array.from(xArray),
@@ -112,7 +115,7 @@ export default Vue.extend({
         JSON.parse(cluster)
       ) as Array<ClusterResponse>;
 
-      this.$store.commit("setClusters", clusters);
+      this.$store.commit("setDestinationClusters", clusters);
       console.timeLog("cluster");
       this.$router.push({ name: "map" });
     }

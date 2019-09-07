@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { WeightedClusterCenter } from "../types/cluster";
+// import { WeightedClusterCenter } from "../types/cluster";
 const VueGoogleMaps = require("vue2-google-maps");
 
 export default Vue.extend({
@@ -26,7 +26,7 @@ export default Vue.extend({
   methods: {
     options() {
       return {
-        strokeOpacity: 0.35,
+        strokeOpacity: 0,
         strokeColor: "#000",
         fillColor: this.$props.color || "#35b200",
         fillOpacity: 0.5
