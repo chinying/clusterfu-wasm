@@ -97,6 +97,18 @@ export default Vue.extend({
       // // recompute suggestions based on new destinations
       // this.suggestions()
     },
+
+    async toggleOrigin (cluster: WeightedClusterCenter) {
+      let selectedOrigins = this.$data.selectedOrigins
+      // toggle selected origin
+      const originKey = `${cluster.x}_${cluster.y}`
+      if (!(originKey in selectedOrigins)) {
+        this.$set(selectedOrigins, originKey, cluster)
+      } else {
+        this.$delete(selectedOrigins, originKey)
+      }
+    },
+
     // https://stackoverflow.com/questions/50930796/how-to-get-typescript-method-callback-working-in-vuejs
     findOriginClusters: _.debounce(async function(this: any) {
       const destinationArray =  Object.values(this.$data.selectedDestinations) as WeightedClusterCenter[]
