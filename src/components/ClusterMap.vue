@@ -69,6 +69,17 @@
       <h5 class="m-1 collapse-header" id="origin-cluster-header">
         Origin Cluster(s)
       </h5>
+      <ul v-for="origin in selectedOriginsArray" :key="origin.x + '_' + origin.y">
+        <li>
+          <span class="deletion-hover"><a href="#" @click.prevent="toggleOrigin(origin)">Remove</a></span>
+          <a href="#" @click="panMap(origin.center.lat, origin.center.lng)">
+            <span v-if="`clusterNames[${origin.x}_${origin.y}] !== undefined`">{{ clusterNames[`${origin.x}_${origin.y}`] }}</span>
+            <span v-else>{{ origin.center.lat }} {{ origin.center.lng }}</span>
+          </a>
+        </li>
+      </ul>
+
+
       <p v-if="suggestionsSize > 0">{{ suggestionsSize }} suggestions</p>
       <div
         v-for="(suggestedGroup, groupTime) in suggestions()"
@@ -120,10 +131,11 @@ export default Vue.extend({
   data() {
     return {
       mapConfig,
-      selectedOrigins: {},
-      selectedDestinations: {},
-      originClusters: [],
-      filteredOD: []
+      selectedOrigins: {} as {[key: string]: WeightedClusterCenter},
+      selectedDestinations: {} as {[key: string]: WeightedClusterCenter},
+      originClusters: [] as Array<WeightedClusterCenter>,
+      filteredOD: [],
+      clusterNames: {},
     };
   },
   methods: {
@@ -137,7 +149,7 @@ export default Vue.extend({
         this.$set(selectedDestinations, destKey, cluster);
         let latlng = XYToLatLng(cluster.x, cluster.y);
         // only set but don't delete since they don't need to be recomputed
-        // this.$set(this.$data.clusterNames, destKey, await this.reverseGeocode(latlng.lat, latlng.lng))
+        this.$set(this.$data.clusterNames, destKey, `${latlng.lat}_${latlng.lng}`)
       } else {
         this.$delete(selectedDestinations, destKey);
       }
@@ -145,7 +157,7 @@ export default Vue.extend({
       // // call destination clusters
       this.findOriginClusters();
       // // recompute suggestions based on new destinations
-      // this.suggestions()
+      this.suggestions()
     },
 
     async toggleOrigin(cluster: WeightedClusterCenter) {
@@ -300,7 +312,7 @@ export default Vue.extend({
         let p = this.pointsFactory(point, xIndex, yIndex);
         if (p === null) return false;
         let distances = clusters.map(c =>
-          turfDistance(p, c, { units: "kilometres" })
+          turfDistance(p, c, { units: "metres" })
         );
         return distances.some((dist: number) => dist < clusterDistance);
       };
