@@ -15,7 +15,7 @@
           :key="`destination_${index}`"
           :center="destination.center"
           :radiusMultiplier="50"
-          :population="destination.weight"
+          :population="destination.normalizedWeight"
           :color="'mediumaquamarine'"
           @click="toggleDestination(destination)"
         ></ClusterOfPoints>
@@ -25,7 +25,7 @@
           :key="`origin_${index}`"
           :center="origin.center"
           :radiusMultiplier="50"
-          :population="origin.weight"
+          :population="origin.normalizedWeight"
           :color="'crimson'"
           @click="toggleOrigin(origin)"
         ></ClusterOfPoints>
