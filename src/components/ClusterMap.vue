@@ -29,6 +29,18 @@
           :color="'crimson'"
           @click="toggleOrigin(origin)"
         ></ClusterOfPoints>
+
+        <GmapMarker
+          v-for="origin in selectedOriginsArray"
+          :key="origin.x + ',' + origin.y"
+          :position="{lat: origin.center.lat, lng: origin.center.lng}"
+        ></GmapMarker>
+        <GmapMarker
+          v-for="dest in selectedDestinationsArray"
+          :key="dest.x + ',' + dest.y"
+          :position="{lat: dest.center.lat, lng: dest.center.lng}"
+        ></GmapMarker>
+
       </GmapMap>
     </div>
     <div id="floating_menu">
