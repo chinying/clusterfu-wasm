@@ -5,9 +5,9 @@ module.exports = {
   },
   extends: [
     "plugin:vue/essential",
+    "airbnb/base",
     "@vue/prettier",
-    "@vue/typescript",
-    "airbnb/base"
+    "@vue/typescript"
   ],
   rules: {
     "no-console": process.env.NODE_ENV === "production" ? "error" : "off",
@@ -15,5 +15,8 @@ module.exports = {
   },
   parserOptions: {
     parser: "@typescript-eslint/parser"
+  },
+  settings: {
+    "import/resolver": "webpack"
   }
 };

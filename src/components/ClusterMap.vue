@@ -113,7 +113,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue from "vue";
 import * as _ from "lodash";
 import {
   point,
@@ -123,12 +123,12 @@ import {
 } from "@turf/turf";
 import ClusterOfPoints from "./Cluster.vue";
 
-import { ClusterResponse, WeightedClusterCenter } from '../types/cluster';
-import { XYToLatLng, mapToArray } from '../utils';
+import { ClusterResponse, WeightedClusterCenter } from "../types/cluster";
+import { XYToLatLng, mapToArray } from "../utils";
 
-const VueGoogleMaps = require('vue2-google-maps');
+const VueGoogleMaps = require("vue2-google-maps");
 // import * as VueGoogleMaps from 'vue2-google-maps'
-const mapConfig = require('./mapStyles.json');
+const mapConfig = require("./mapStyles.json");
 
 export default Vue.extend({
   name: "ClusterMap",
@@ -145,7 +145,7 @@ export default Vue.extend({
       selectedDestinations: {} as { [key: string]: WeightedClusterCenter },
       originClusters: [] as Array<WeightedClusterCenter>,
       filteredOD: [],
-      clusterNames: {},
+      clusterNames: {}
     };
   },
   methods: {
@@ -162,7 +162,7 @@ export default Vue.extend({
         this.$set(
           this.$data.clusterNames,
           destKey,
-          `${latlng.lat}_${latlng.lng}`,
+          `${latlng.lat}_${latlng.lng}`
         );
       } else {
         this.$delete(selectedDestinations, destKey);
@@ -274,9 +274,9 @@ export default Vue.extend({
       clusterDistance: number
     ) {
       const startTime = Date.now();
-      console.log('started cluster fn');
+      console.log("started cluster fn");
       const wasm = await import("clusterfu-binary");
-      console.log('loaded module', Date.now() - startTime);
+      console.log("loaded module", Date.now() - startTime);
       try {
         // this.$store.commit('setLoading', true)
         // this.$store.commit('setLoaderText', 'Computing clusters')
@@ -286,7 +286,7 @@ export default Vue.extend({
           Float64Array.from(points[2]),
           clusterDistance
         );
-        console.log('finished calling cluster', Date.now() - startTime);
+        console.log("finished calling cluster", Date.now() - startTime);
 
         const clusters = JSON.parse(clusterResults).map((cluster: string) =>
           JSON.parse(cluster)
@@ -294,7 +294,7 @@ export default Vue.extend({
 
         const weights = clusters.map(v => v.weight);
         const ratio = Math.max(...weights) / 100;
-        const what = clusters.map(el => {
+        const weightedClusters = clusters.map(el => {
           const normalizedWeight = Math.round(el.weight / ratio) + 3; // +3 as base value
           const latlng = XYToLatLng(el.x, el.y);
           const center = {
@@ -309,9 +309,9 @@ export default Vue.extend({
             center
           };
         });
-        console.log('finished formatting response', Date.now() - startTime);
+        console.log("finished formatting response", Date.now() - startTime);
 
-        return what;
+        return weightedClusters;
       } catch (err) {
         console.error(err);
       } finally {

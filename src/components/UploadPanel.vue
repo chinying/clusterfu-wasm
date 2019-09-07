@@ -64,7 +64,7 @@ export default Vue.extend({
         },
         error(err) {
           console.error(err);
-        },
+        }
       });
     },
 
