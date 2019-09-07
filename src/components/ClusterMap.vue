@@ -32,18 +32,28 @@
       </GmapMap>
     </div>
     <div id="floating_menu">
-      <h3>Destinations</h3>
-      <p v-for="destination in destinationClusters" :key="JSON.stringify(destination.center)">
-        {{
-          destination.center.lat + "," + destination.center.lng + " - " + destination.weight
-        }}
-      </p>
-      <h3>Origins</h3>
-      <p v-for="origin in originClusters" :key="JSON.stringify(origin.center)">
-        {{
-          origin.center.lat + "," + origin.center.lng + " - " + origin.weight
-        }}
-      </p>
+      <h5 class="m-1 collapse-header" id="destination-cluster-header">Destination Cluster(s)</h5>
+      <ul v-for="dest in selectedDestinationsArray" :key="dest.x + '_' + dest.y">
+        <li>
+          <span class="deletion-hover"><a href="#" @click.prevent="toggleDestination(dest)">Remove</a></span>
+          <a href="#" @click="panMap(dest.coords.lat, dest.coords.lng)">
+            <span v-if="`clusterNames[${dest.x}_${dest.y}] !== undefined`">{{ clusterNames[`${dest.x}_${dest.y}`] }}</span>
+            <span v-else>{{ dest.coords.lat }} {{ dest.coords.lng }}</span>
+          </a>
+        </li>
+      </ul>
+
+      <h5 class="m-1 collapse-header" id="origin-cluster-header">Origin Cluster(s)</h5>
+      <p v-if="suggestionsSize > 0">{{ suggestionsSize }} suggestions</p>
+      <div v-for="(suggestedGroup, groupTime) in suggestions()" :key="groupTime">
+        <p style="font-weight: 700; text-align: left; padding-left: 1em;"> {{ groupTime }} </p>
+        <p v-for="(row, suggestionIndex) in suggestedGroup" :key="suggestionIndex" class="mx-4">
+          {{ formatSuggestion(row) | oneline }}
+        </p>
+      </div>
+      <!-- <p v-if="selectedDestinationsArray.length > 0 && selectedOriginsArray.length === 0">
+        Please select a red cluster on the map
+      </p> -->
     </div>
   </div>
 </template>
@@ -52,9 +62,10 @@
 import Vue from "vue";
 import ClusterOfPoints from "./Cluster.vue";
 const VueGoogleMaps = require("vue2-google-maps");
+// import * as VueGoogleMaps from 'vue2-google-maps'
 const mapConfig = require("./mapStyles.json");
 import * as _ from "lodash";
-import { point, Point as TurfPoint, distance as turfDistance } from '@turf/turf'
+import { point, Point as TurfPoint, distance as turfDistance, Feature } from '@turf/turf'
 
 import { ClusterResponse, WeightedClusterCenter } from "../types/cluster";
 import { XYToLatLng } from "../utils";
@@ -71,8 +82,8 @@ export default Vue.extend({
     return {
       mapConfig,
       selectedOrigins: {},
-      selectedDestinations: {} as {[key: string]: WeightedClusterCenter},
-      originClusters: [] as Array<WeightedClusterCenter>,
+      selectedDestinations: {},
+      originClusters: [],
       filteredOD: []
     };
   },
@@ -106,6 +117,24 @@ export default Vue.extend({
         this.$set(selectedOrigins, originKey, cluster)
       } else {
         this.$delete(selectedOrigins, originKey)
+      }
+    },
+
+    suggestions () {
+      let selectedOrigins = this.$data.selectedOrigins
+      let clusterDistance = 300
+      if (Object.keys(selectedOrigins).length > 0) {
+        const originArray = Object.values(this.$data.selectedOrigins) as WeightedClusterCenter[]
+        const clusters = originArray
+          .map((c: WeightedClusterCenter) => point([c.center.lng, c.center.lat]))
+        let isNearSomeClusterCentre = this.isNearSomeClusterCentreFactory(clusters, clusterDistance, 1, 2)
+        const suggestions = this.$data.filteredOD.filter(isNearSomeClusterCentre)
+
+        if (suggestions.length > 0 && this.$data.timeColIndex !== null) {
+          return _.groupBy(suggestions, p => p[this.$data.timeColIndex])
+        } else return {'Uncategorised': suggestions.map((s: any) => s)}
+      } else {
+        return {}
       }
     },
 
@@ -194,7 +223,7 @@ export default Vue.extend({
       }
     },
 
-    isNearSomeClusterCentreFactory (clusters: TurfPoint[], clusterDistance: number, xIndex: number, yIndex: number) {
+    isNearSomeClusterCentreFactory (clusters: Feature<TurfPoint>[], clusterDistance: number, xIndex: number, yIndex: number) {
       return (point: any[]) => {
         // convert points from xy pairs to turf.point object
         let p = this.pointsFactory(point, xIndex, yIndex)
@@ -209,6 +238,14 @@ export default Vue.extend({
       let p = XYToLatLng(destX, destY)
       return point([p.lng, p.lat])
     },
+
+    panMap (lat: number, lng:number) {
+      this.$refs.mapRef.panTo({lat, lng})
+    },
+
+    formatSuggestion (arr: Array<any>) { // only return Origin postal, timing, etc.
+      return [arr[5]].concat(arr.slice(7))
+    }
 
   },
   computed: {
@@ -234,6 +271,15 @@ export default Vue.extend({
           normalizedWeight
         };
       });
+    },
+    suggestionsSize (): number {
+      return _.flatMap(this.suggestions()).length;
+    }
+  },
+
+  filters: {
+    oneline (arr: Array<string>) {
+      return arr.filter(a => a !== '').join(', ')
     }
   }
 });
