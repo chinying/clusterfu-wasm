@@ -57,11 +57,11 @@
               >Remove</a
             ></span
           >
-          <a href="#" @click="panMap(dest.coords.lat, dest.coords.lng)">
+          <a href="#" @click="panMap(dest.center.lat, dest.center.lng)">
             <span v-if="`clusterNames[${dest.x}_${dest.y}] !== undefined`">{{
               clusterNames[`${dest.x}_${dest.y}`]
             }}</span>
-            <span v-else>{{ dest.coords.lat }} {{ dest.coords.lng }}</span>
+            <span v-else>{{ dest.center.lat }} {{ dest.center.lng }}</span>
           </a>
         </li>
       </ul>
