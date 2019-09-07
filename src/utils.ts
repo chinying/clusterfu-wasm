@@ -22,3 +22,7 @@ export function XYToLatLng(
     lat: latlng[1]
   };
 }
+
+export function mapToArray<T>(m: {[key: string]: T}): Array<T> {
+  return Object.values(m)
+}

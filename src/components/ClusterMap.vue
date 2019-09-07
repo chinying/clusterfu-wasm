@@ -95,7 +95,7 @@ import {
 } from "@turf/turf";
 
 import { ClusterResponse, WeightedClusterCenter } from "../types/cluster";
-import { XYToLatLng } from "../utils";
+import { XYToLatLng, mapToArray } from "../utils";
 
 export default Vue.extend({
   name: "ClusterMap",
@@ -333,6 +333,15 @@ export default Vue.extend({
         };
       });
     },
+
+    selectedOriginsArray(): Array<WeightedClusterCenter> {
+      return mapToArray(this.$data.selectedOrigins)
+    },
+
+    selectedDestinationsArray(): Array<WeightedClusterCenter> {
+      return mapToArray(this.$data.selectedDestinations)
+    },
+
     suggestionsSize(): number {
       return _.flatMap(this.suggestions()).length;
     }
