@@ -33,14 +33,13 @@
         <GmapMarker
           v-for="origin in selectedOriginsArray"
           :key="origin.x + ',' + origin.y"
-          :position="{lat: origin.center.lat, lng: origin.center.lng}"
+          :position="{ lat: origin.center.lat, lng: origin.center.lng }"
         ></GmapMarker>
         <GmapMarker
           v-for="dest in selectedDestinationsArray"
           :key="dest.x + ',' + dest.y"
-          :position="{lat: dest.center.lat, lng: dest.center.lng}"
+          :position="{ lat: dest.center.lat, lng: dest.center.lng }"
         ></GmapMarker>
-
       </GmapMap>
     </div>
     <div id="floating_menu">
@@ -69,23 +68,33 @@
       <h5 class="m-1 collapse-header" id="origin-cluster-header">
         Origin Cluster(s)
       </h5>
-      <ul v-for="origin in selectedOriginsArray" :key="origin.x + '_' + origin.y">
+      <ul
+        v-for="origin in selectedOriginsArray"
+        :key="origin.x + '_' + origin.y"
+      >
         <li>
-          <span class="deletion-hover"><a href="#" @click.prevent="toggleOrigin(origin)">Remove</a></span>
+          <span class="deletion-hover"
+            ><a href="#" @click.prevent="toggleOrigin(origin)">Remove</a></span
+          >
           <a href="#" @click="panMap(origin.center.lat, origin.center.lng)">
-            <span v-if="`clusterNames[${origin.x}_${origin.y}] !== undefined`">{{ clusterNames[`${origin.x}_${origin.y}`] }}</span>
+            <span
+              v-if="`clusterNames[${origin.x}_${origin.y}] !== undefined`"
+              >{{ clusterNames[`${origin.x}_${origin.y}`] }}</span
+            >
             <span v-else>{{ origin.center.lat }} {{ origin.center.lng }}</span>
           </a>
         </li>
       </ul>
-
 
       <p v-if="suggestionsSize > 0">{{ suggestionsSize }} suggestions</p>
       <div
         v-for="(suggestedGroup, groupTime) in suggestions()"
         :key="groupTime"
       >
-        <p style="font-weight: 700; text-align: left; padding-left: 1em;">
+        <p
+          v-if="groupTime"
+          style="font-weight: 700; text-align: left; padding-left: 1em;"
+        >
           {{ groupTime }}
         </p>
         <p
@@ -104,11 +113,7 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import ClusterOfPoints from "./Cluster.vue";
-const VueGoogleMaps = require("vue2-google-maps");
-// import * as VueGoogleMaps from 'vue2-google-maps'
-const mapConfig = require("./mapStyles.json");
+import Vue from 'vue';
 import * as _ from "lodash";
 import {
   point,
@@ -116,9 +121,14 @@ import {
   distance as turfDistance,
   Feature
 } from "@turf/turf";
+import ClusterOfPoints from "./Cluster.vue";
 
-import { ClusterResponse, WeightedClusterCenter } from "../types/cluster";
-import { XYToLatLng, mapToArray } from "../utils";
+import { ClusterResponse, WeightedClusterCenter } from '../types/cluster';
+import { XYToLatLng, mapToArray } from '../utils';
+
+const VueGoogleMaps = require('vue2-google-maps');
+// import * as VueGoogleMaps from 'vue2-google-maps'
+const mapConfig = require('./mapStyles.json');
 
 export default Vue.extend({
   name: "ClusterMap",
@@ -131,8 +141,8 @@ export default Vue.extend({
   data() {
     return {
       mapConfig,
-      selectedOrigins: {} as {[key: string]: WeightedClusterCenter},
-      selectedDestinations: {} as {[key: string]: WeightedClusterCenter},
+      selectedOrigins: {} as { [key: string]: WeightedClusterCenter },
+      selectedDestinations: {} as { [key: string]: WeightedClusterCenter },
       originClusters: [] as Array<WeightedClusterCenter>,
       filteredOD: [],
       clusterNames: {},
@@ -140,16 +150,20 @@ export default Vue.extend({
   },
   methods: {
     async toggleDestination(cluster: WeightedClusterCenter) {
-      let selectedDestinations = this.$data.selectedDestinations;
+      const { selectedDestinations } = this.$data;
       this.$data.originClusters = [];
       this.$data.selectedOrigins = {};
       // toggle selected origin
       const destKey = `${cluster.x}_${cluster.y}`;
       if (!(destKey in selectedDestinations)) {
         this.$set(selectedDestinations, destKey, cluster);
-        let latlng = XYToLatLng(cluster.x, cluster.y);
+        const latlng = XYToLatLng(cluster.x, cluster.y);
         // only set but don't delete since they don't need to be recomputed
-        this.$set(this.$data.clusterNames, destKey, `${latlng.lat}_${latlng.lng}`)
+        this.$set(
+          this.$data.clusterNames,
+          destKey,
+          `${latlng.lat}_${latlng.lng}`,
+        );
       } else {
         this.$delete(selectedDestinations, destKey);
       }
@@ -157,11 +171,11 @@ export default Vue.extend({
       // // call destination clusters
       this.findOriginClusters();
       // // recompute suggestions based on new destinations
-      this.suggestions()
+      this.suggestions();
     },
 
     async toggleOrigin(cluster: WeightedClusterCenter) {
-      let selectedOrigins = this.$data.selectedOrigins;
+      const { selectedOrigins } = this.$data;
       // toggle selected origin
       const originKey = `${cluster.x}_${cluster.y}`;
       if (!(originKey in selectedOrigins)) {
@@ -172,8 +186,8 @@ export default Vue.extend({
     },
 
     suggestions() {
-      let selectedOrigins = this.$data.selectedOrigins;
-      let clusterDistance = 300;
+      const { selectedOrigins } = this.$data;
+      const clusterDistance = 300;
       if (Object.keys(selectedOrigins).length > 0) {
         const originArray = Object.values(
           this.$data.selectedOrigins
@@ -181,7 +195,7 @@ export default Vue.extend({
         const clusters = originArray.map((c: WeightedClusterCenter) =>
           point([c.center.lng, c.center.lat])
         );
-        let isNearSomeClusterCentre = this.isNearSomeClusterCentreFactory(
+        const isNearSomeClusterCentre = this.isNearSomeClusterCentreFactory(
           clusters,
           clusterDistance,
           1,
@@ -193,10 +207,10 @@ export default Vue.extend({
 
         if (suggestions.length > 0 && this.$data.timeColIndex !== null) {
           return _.groupBy(suggestions, p => p[this.$data.timeColIndex]);
-        } else return { Uncategorised: suggestions.map((s: any) => s) };
-      } else {
-        return {};
+        }
+        return { Uncategorised: suggestions.map((s: any) => s) };
       }
+      return {};
     },
 
     // https://stackoverflow.com/questions/50930796/how-to-get-typescript-method-callback-working-in-vuejs
@@ -210,7 +224,7 @@ export default Vue.extend({
 
       const clusterDistance = 300; // FIXME: user input
 
-      let isNearSomeClusterCentre = this.isNearSomeClusterCentreFactory(
+      const isNearSomeClusterCentre = this.isNearSomeClusterCentreFactory(
         clusters,
         clusterDistance,
         3,
@@ -226,7 +240,7 @@ export default Vue.extend({
         // clear origin clusters if any
         this.$data.originClusters = [];
         // empty the selectedOrigins object
-        for (let key in this.$data.selectedOrigins) {
+        for (const key in this.$data.selectedOrigins) {
           if (this.$data.selectedOrigins.hasOwnProperty(key)) {
             this.$delete(this.$data.selectedOrigins, key);
           }
@@ -238,7 +252,7 @@ export default Vue.extend({
       // let postToClustering = entriesWithinCluster.map((point: any) => {
       //   return {x: parseFloat(point[1]), y: parseFloat(point[2]), weight: 1}
       // })
-      let postToClustering = entriesWithinCluster.reduce(
+      const postToClustering = entriesWithinCluster.reduce(
         (acc: Array<Array<number>>, point: any) => {
           acc[0].push(parseFloat(point[1]));
           acc[1].push(parseFloat(point[2]));
@@ -259,8 +273,10 @@ export default Vue.extend({
       points: Array<Array<number>>,
       clusterDistance: number
     ) {
+      const startTime = Date.now();
+      console.log('started cluster fn');
       const wasm = await import("clusterfu-binary");
-
+      console.log('loaded module', Date.now() - startTime);
       try {
         // this.$store.commit('setLoading', true)
         // this.$store.commit('setLoaderText', 'Computing clusters')
@@ -270,13 +286,14 @@ export default Vue.extend({
           Float64Array.from(points[2]),
           clusterDistance
         );
+        console.log('finished calling cluster', Date.now() - startTime);
 
         const clusters = JSON.parse(clusterResults).map((cluster: string) =>
           JSON.parse(cluster)
         ) as Array<ClusterResponse>;
 
-        let weights = clusters.map(v => v.weight);
-        let ratio = Math.max(...weights) / 100;
+        const weights = clusters.map(v => v.weight);
+        const ratio = Math.max(...weights) / 100;
         const what = clusters.map(el => {
           const normalizedWeight = Math.round(el.weight / ratio) + 3; // +3 as base value
           const latlng = XYToLatLng(el.x, el.y);
@@ -292,6 +309,8 @@ export default Vue.extend({
             center
           };
         });
+        console.log('finished formatting response', Date.now() - startTime);
+
         return what;
       } catch (err) {
         console.error(err);
@@ -309,9 +328,9 @@ export default Vue.extend({
     ) {
       return (point: any[]) => {
         // convert points from xy pairs to turf.point object
-        let p = this.pointsFactory(point, xIndex, yIndex);
+        const p = this.pointsFactory(point, xIndex, yIndex);
         if (p === null) return false;
-        let distances = clusters.map(c =>
+        const distances = clusters.map(c =>
           turfDistance(p, c, { units: "metres" })
         );
         return distances.some((dist: number) => dist < clusterDistance);
@@ -319,8 +338,8 @@ export default Vue.extend({
     },
 
     pointsFactory(_point: Array<any>, xIndex: number, yIndex: number) {
-      let [destX, destY] = [xIndex, yIndex].map(i => parseFloat(_point[i]));
-      let p = XYToLatLng(destX, destY);
+      const [destX, destY] = [xIndex, yIndex].map(i => parseFloat(_point[i]));
+      const p = XYToLatLng(destX, destY);
       return point([p.lng, p.lat]);
     },
 
@@ -342,7 +361,7 @@ export default Vue.extend({
       const weights = clusters.map((c: ClusterResponse) => c.weight);
       const ratio = Math.max(...weights) / 100;
       return clusters.map((cluster: ClusterResponse) => {
-        let coordinates = XYToLatLng(cluster.x, cluster.y);
+        const coordinates = XYToLatLng(cluster.x, cluster.y);
         const normalizedWeight = Math.round(cluster.weight / ratio) + 3; // +3 as base value
 
         return {
@@ -359,11 +378,11 @@ export default Vue.extend({
     },
 
     selectedOriginsArray(): Array<WeightedClusterCenter> {
-      return mapToArray(this.$data.selectedOrigins)
+      return mapToArray(this.$data.selectedOrigins);
     },
 
     selectedDestinationsArray(): Array<WeightedClusterCenter> {
-      return mapToArray(this.$data.selectedDestinations)
+      return mapToArray(this.$data.selectedDestinations);
     },
 
     suggestionsSize(): number {
